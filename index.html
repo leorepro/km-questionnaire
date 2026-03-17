@@ -366,13 +366,13 @@
       </div>
       <div class="contact-field">
         <label class="contact-label" for="contactPhone">聯絡電話<span class="required">*</span></label>
-        <input class="contact-input" type="tel" id="contactPhone" placeholder="請輸入聯絡電話" oninput="validateForm()">
-        <div class="contact-error" id="phoneError">請填寫聯絡電話</div>
+        <input class="contact-input" type="tel" id="contactPhone" placeholder="請輸入聯絡電話" oninput="validateForm()" onblur="checkPhone()">
+        <div class="contact-error" id="phoneError">請輸入有效的聯絡電話（至少 8 碼）</div>
       </div>
       <div class="contact-field">
         <label class="contact-label" for="contactEmail">電子郵件<span class="required">*</span></label>
-        <input class="contact-input" type="email" id="contactEmail" placeholder="請輸入電子郵件" oninput="validateForm()">
-        <div class="contact-error" id="emailError">請填寫有效的電子郵件</div>
+        <input class="contact-input" type="email" id="contactEmail" placeholder="請輸入電子郵件" oninput="validateForm()" onblur="checkEmail()">
+        <div class="contact-error" id="emailError">請輸入有效的電子郵件格式</div>
       </div>
     </div>
   </div>
@@ -504,6 +504,40 @@ function updateNav() {
   validateForm();
 }
 
+function isPhoneValid(phone) {
+  return /^[\d\s+\-()]{8,}$/.test(phone);
+}
+
+function isEmailValid(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function checkPhone() {
+  const el = document.getElementById('contactPhone');
+  const err = document.getElementById('phoneError');
+  const val = el.value.trim();
+  if (val && !isPhoneValid(val)) {
+    el.classList.add('invalid');
+    err.classList.add('show');
+  } else {
+    el.classList.remove('invalid');
+    err.classList.remove('show');
+  }
+}
+
+function checkEmail() {
+  const el = document.getElementById('contactEmail');
+  const err = document.getElementById('emailError');
+  const val = el.value.trim();
+  if (val && !isEmailValid(val)) {
+    el.classList.add('invalid');
+    err.classList.add('show');
+  } else {
+    el.classList.remove('invalid');
+    err.classList.remove('show');
+  }
+}
+
 function validateForm() {
   const done = Object.keys(answers).length;
   const left = TOTAL - done;
@@ -512,8 +546,13 @@ function validateForm() {
   const name = document.getElementById('contactName').value.trim();
   const phone = document.getElementById('contactPhone').value.trim();
   const email = document.getElementById('contactEmail').value.trim();
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const allFieldsFilled = name && phone && email && emailValid;
+  const phoneValid = isPhoneValid(phone);
+  const emailValid = isEmailValid(email);
+  const allFieldsFilled = name && phone && phoneValid && email && emailValid;
+
+  // 即時清除已修正的錯誤提示
+  if (phoneValid) { document.getElementById('contactPhone').classList.remove('invalid'); document.getElementById('phoneError').classList.remove('show'); }
+  if (emailValid) { document.getElementById('contactEmail').classList.remove('invalid'); document.getElementById('emailError').classList.remove('show'); }
 
   if (left === 0 && allFieldsFilled) {
     note.innerHTML = '所有題目與聯絡資訊已完成，可以產生報告';
@@ -620,7 +659,11 @@ function reset() {
   document.getElementById('submitBtn').textContent = '產生診斷報告';
   document.getElementById('contactName').value = '';
   document.getElementById('contactPhone').value = '';
+  document.getElementById('contactPhone').classList.remove('invalid');
+  document.getElementById('phoneError').classList.remove('show');
   document.getElementById('contactEmail').value = '';
+  document.getElementById('contactEmail').classList.remove('invalid');
+  document.getElementById('emailError').classList.remove('show');
   document.getElementById('questionsWrap').style.display = '';
   document.getElementById('contactWrap').style.display = '';
   document.getElementById('submitWrap').style.display = '';
