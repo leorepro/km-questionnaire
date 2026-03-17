@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>企業知識管理診斷評估</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #1d1d1f; --gray-1: #3a3a3c; --gray-2: #6e6e73;
+    --gray-3: #aeaeb2; --gray-4: #d2d2d7; --gray-5: #e8e8ed;
+    --gray-6: #f5f5f7; --white: #ffffff;
+    --blue: #0071e3; --blue-hover: #0077ed; --blue-light: #e8f1fd;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--font); background: var(--white); color: var(--black); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; height: 52px;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 0.5px solid var(--gray-4);
+    display: flex; align-items: center; justify-content: center; z-index: 200;
+  }
+  .nav-inner { width: 100%; max-width: 1000px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .nav-brand { font-size: 14px; font-weight: 600; letter-spacing: -0.2px; color: var(--black); white-space: nowrap; }
+  .nav-brand span { font-weight: 400; color: var(--gray-2); margin-left: 6px; font-size: 13px; }
+  .nav-progress { display: flex; align-items: center; gap: 12px; flex: 1; max-width: 280px; margin-left: auto; }
+  .progress-track { flex: 1; height: 3px; background: var(--gray-5); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--blue); border-radius: 2px; width: 0%; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
+  .progress-label { font-size: 12px; color: var(--gray-2); min-width: 42px; text-align: right; }
+
+  .hero { padding: 108px 28px 48px; max-width: 760px; margin: 0 auto; }
+  .hero-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-2); margin-bottom: 18px; }
+  .hero-title { font-size: clamp(32px, 4.5vw, 48px); font-weight: 700; letter-spacing: -1.5px; line-height: 1.06; color: var(--black); margin-bottom: 22px; }
+  .hero-body { font-size: 17px; line-height: 1.65; color: var(--gray-1); font-weight: 300; letter-spacing: -0.15px; max-width: 620px; margin-bottom: 32px; }
+  .hero-meta { display: flex; gap: 28px; flex-wrap: wrap; }
+  .hero-meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .hero-meta-num { font-size: 22px; font-weight: 700; letter-spacing: -0.8px; color: var(--black); }
+  .hero-meta-label { font-size: 12px; color: var(--gray-2); }
+  .hero-rule { height: 0.5px; background: var(--gray-4); margin: 40px 0 0; }
+
+  .questions-wrap { max-width: 760px; margin: 0 auto; padding: 0 28px 60px; }
+  .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); padding: 40px 0 18px; }
+
+  .q-card {
+    border: 0.5px solid var(--gray-4); border-radius: 16px; margin-bottom: 12px; overflow: hidden;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    opacity: 0; transform: translateY(12px);
+    animation: fadeUp 0.45s cubic-bezier(0.4,0,0.2,1) forwards;
+  }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .q-card:nth-child(1){animation-delay:.04s}.q-card:nth-child(2){animation-delay:.08s}.q-card:nth-child(3){animation-delay:.12s}
+  .q-card:nth-child(4){animation-delay:.16s}.q-card:nth-child(5){animation-delay:.20s}.q-card:nth-child(6){animation-delay:.24s}
+  .q-card:nth-child(7){animation-delay:.28s}.q-card:nth-child(8){animation-delay:.32s}.q-card:nth-child(9){animation-delay:.36s}
+  .q-card:nth-child(10){animation-delay:.40s}.q-card:nth-child(11){animation-delay:.44s}.q-card:nth-child(12){animation-delay:.48s}
+  .q-card.answered { border-color: #b0ceee; box-shadow: 0 2px 18px rgba(0,113,227,0.07); }
+
+  .q-header { padding: 22px 24px 16px; background: var(--white); }
+  .q-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .q-num {
+    min-width: 22px; height: 22px; border-radius: 50%; background: var(--gray-5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--gray-2);
+    flex-shrink: 0; margin-top: 1px; transition: background 0.3s, color 0.3s;
+  }
+  .q-card.answered .q-num { background: var(--blue); color: var(--white); }
+  .q-dimension { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-3); margin-top: 3px; }
+  .q-text { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; line-height: 1.5; color: var(--black); padding-left: 34px; }
+  .q-sub { font-size: 13px; color: var(--gray-2); line-height: 1.55; padding-left: 34px; margin-top: 6px; font-weight: 400; letter-spacing: -0.1px; }
+
+  .options { display: flex; flex-direction: column; border-top: 0.5px solid var(--gray-5); }
+  .option {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 13px 24px; border-bottom: 0.5px solid var(--gray-5);
+    cursor: pointer; transition: background 0.15s ease;
+  }
+  .option:last-child { border-bottom: none; }
+  .option:hover { background: var(--gray-6); }
+  .option.selected { background: var(--blue-light); }
+  .opt-indicator {
+    width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid var(--gray-4);
+    flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s ease; background: var(--white);
+  }
+  .option.selected .opt-indicator { border-color: var(--blue); background: var(--blue); }
+  .opt-indicator::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--white); opacity: 0; transform: scale(0); transition: all 0.15s ease; }
+  .option.selected .opt-indicator::after { opacity: 1; transform: scale(1); }
+  .opt-text { font-size: 14px; line-height: 1.6; color: var(--gray-1); letter-spacing: -0.05px; }
+  .option.selected .opt-text { color: #004aad; }
+
+  .submit-wrap { max-width: 760px; margin: 0 auto; padding: 0 28px 80px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .submit-note { font-size: 13px; color: var(--gray-2); text-align: center; }
+  .submit-btn {
+    padding: 13px 34px; background: var(--blue); color: var(--white);
+    font-family: var(--font); font-size: 16px; font-weight: 500; letter-spacing: -0.2px;
+    border: none; border-radius: 980px; cursor: pointer;
+    transition: background 0.2s, transform 0.15s; -webkit-font-smoothing: antialiased;
+  }
+  .submit-btn:hover:not(:disabled) { background: var(--blue-hover); transform: scale(1.02); }
+  .submit-btn:active:not(:disabled) { transform: scale(0.98); }
+  .submit-btn:disabled { background: var(--gray-5); color: var(--gray-3); cursor: not-allowed; transform: none; }
+
+  .result-wrap { display: none; max-width: 760px; margin: 0 auto; padding: 0 28px 100px; }
+  .result-wrap.show { display: block; }
+  .result-card { border: 0.5px solid var(--gray-4); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 48px rgba(0,0,0,0.07); animation: fadeUp 0.5s cubic-bezier(0.4,0,0.2,1) forwards; opacity: 0; }
+  .result-hero { padding: 40px 36px 32px; border-bottom: 0.5px solid var(--gray-5); }
+  .result-level-tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; margin-bottom: 16px; }
+  .result-title { font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 1.1; margin-bottom: 6px; }
+  .result-subtitle { font-size: 15px; color: var(--gray-2); font-weight: 400; margin-bottom: 20px; }
+  .result-score { display: inline-flex; align-items: baseline; gap: 4px; }
+  .result-score-num { font-size: 40px; font-weight: 700; letter-spacing: -1.5px; }
+  .result-score-denom { font-size: 18px; color: var(--gray-3); font-weight: 400; }
+  .result-desc { padding: 28px 36px; border-bottom: 0.5px solid var(--gray-5); font-size: 15px; line-height: 1.8; color: var(--gray-1); letter-spacing: -0.1px; }
+  .result-desc p { margin-bottom: 14px; }
+  .result-desc p:last-child { margin-bottom: 0; }
+  .result-dims { padding: 28px 36px; border-bottom: 0.5px solid var(--gray-5); }
+  .result-dims-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); margin-bottom: 18px; }
+  .dim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .dim-item { padding: 14px 16px; background: var(--gray-6); border-radius: 10px; }
+  .dim-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-3); margin-bottom: 5px; }
+  .dim-val { font-size: 13px; font-weight: 500; color: var(--black); line-height: 1.45; }
+  .dim-bar { height: 3px; border-radius: 2px; background: var(--gray-5); margin-top: 8px; overflow: hidden; }
+  .dim-bar-fill { height: 100%; border-radius: 2px; background: var(--blue); transition: width 0.8s cubic-bezier(0.4,0,0.2,1) 0.3s; }
+  .result-implication { padding: 28px 36px; border-bottom: 0.5px solid var(--gray-5); }
+  .implication-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-3); margin-bottom: 16px; }
+  .implication-points { display: flex; flex-direction: column; gap: 14px; }
+  .implication-point { display: flex; gap: 12px; align-items: flex-start; }
+  .imp-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+  .imp-text { font-size: 14px; line-height: 1.7; color: var(--gray-1); letter-spacing: -0.05px; }
+  .result-footer { padding: 24px 36px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .result-footer-note { font-size: 12px; color: var(--gray-3); line-height: 1.5; max-width: 380px; }
+  .retry-btn { padding: 9px 20px; font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--blue); background: transparent; border: 1px solid var(--gray-4); border-radius: 980px; cursor: pointer; transition: border-color 0.2s, background 0.2s; white-space: nowrap; }
+  .retry-btn:hover { background: var(--gray-6); border-color: var(--gray-3); }
+  .site-footer { border-top: 0.5px solid var(--gray-5); padding: 18px 28px; text-align: center; font-size: 11px; color: var(--gray-3); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">知識管理診斷<span>企業成熟度評估工具</span></div>
+    <div class="nav-progress">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">0 / 12</div>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Knowledge Management Diagnostic</div>
+  <h1 class="hero-title">組織知識管理<br>成熟度評估</h1>
+  <p class="hero-body">本診斷工具針對企業知識流通的核心環節設計，透過 12 道情境題，評估貴組織在知識擷取、流通與利用上的實際能力——而非理想狀態。每道題的選項均源自真實組織的運作模式，請選擇最貼近現況的描述。</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><div class="hero-meta-num">12</div><div class="hero-meta-label">診斷題目</div></div>
+    <div class="hero-meta-item"><div class="hero-meta-num">4</div><div class="hero-meta-label">成熟度等級</div></div>
+    <div class="hero-meta-item"><div class="hero-meta-num">6</div><div class="hero-meta-label">分析維度</div></div>
+    <div class="hero-meta-item"><div class="hero-meta-num">5 min</div><div class="hero-meta-label">評估時間</div></div>
+  </div>
+  <div class="hero-rule"></div>
+</div>
+
+<div class="questions-wrap" id="questionsWrap">
+
+  <div class="section-label">知識擷取與流通</div>
+
+  <div class="q-card" data-q="1">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">1</div><div class="q-dimension">知識搜尋行為</div></div>
+      <div class="q-text">當員工需要了解一個自己未參與的專案背景時，他們實際上會怎麼做？</div>
+      <div class="q-sub">請根據貴組織的真實日常行為作答，而非理想做法。</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">直接傳訊息問當時的負責人，這幾乎是唯一可靠的方式</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">先試著在幾個不同平台搜尋，找不到才問人，通常兩個途徑都要走</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">有明確的文件平台可以查詢，但完整程度因專案而異，有時仍需補問</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">有統一知識庫，結構化程度足夠，多數情況下查詢後即可自行判斷</div></div>
+    </div>
+  </div>
+
+  <div class="q-card" data-q="2">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">2</div><div class="q-dimension">決策可追溯性</div></div>
+      <div class="q-text">六個月前的一個重要業務決策，今天是否還能找到完整的討論脈絡與決策依據？</div>
+      <div class="q-sub">「完整脈絡」指：當時考慮了哪些選項、為何排除、最終依據為何。</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">幾乎不可能——大多數決策靠口頭討論，沒有留下任何書面記錄</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">可以找到結論（如 email 或訊息），但討論過程和依據已無從追溯</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">重大決策通常有記錄，但品質與完整度因人、因團隊而異</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">有標準化的決策記錄格式，背景、選項、依據、負責人均結構化留存</div></div>
+    </div>
+  </div>
+
+  <div class="q-card" data-q="3">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">3</div><div class="q-dimension">知識斷層風險</div></div>
+      <div class="q-text">當一位資深員工離職，他所掌握的核心業務知識會如何轉移？</div>
+      <div class="q-sub">這個問題揭示的是組織知識的「系統性留存率」，而非個別例外情況。</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">實際上很難轉移——離開後通常留下明顯知識缺口，需要數月填補</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">會有交接會議，但知識主要靠口頭傳授，文件化的範圍與品質相當有限</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">有部分流程文件，新人可以上手，但隱性的判斷邏輯與脈絡難以完整轉移</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">知識持續累積在系統中，非個人持有；離職的衝擊僅限人際，不影響知識存取</div></div>
+    </div>
+  </div>
+
+  <div class="q-card" data-q="4">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">4</div><div class="q-dimension">新人上手效率</div></div>
+      <div class="q-text">新進員工平均需要多久，才能獨立找到其工作所需的歷史背景、政策與規範，無需頻繁詢問他人？</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">三個月以上；大量依賴「問旁邊的人」，且常得到不一致的答案</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">四到八週；有些文件，但缺乏系統性，新人需花費大量時間自行拼湊</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">二到三週；有標準 Onboarding 指引，但仍有明顯的知識盲區需要補問</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">一週以內；知識庫結構清晰，新人能快速自學並獲得一致的資訊</div></div>
+    </div>
+  </div>
+
+  <div class="section-label">工具整合與系統治理</div>
+
+  <div class="q-card" data-q="5">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">5</div><div class="q-dimension">工具碎片化程度</div></div>
+      <div class="q-text">追蹤一個跨部門專案從發想到交付的完整歷程，需要翻查幾個不同的工具或平台？</div>
+      <div class="q-sub">請誠實估算，包含 email、即時通訊、文件工具、任務管理系統等所有管道。</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">五個以上；即便翻遍了，關鍵資訊仍可能只存在某人的信箱或記憶中</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">三到四個；各平台間沒有整合，資訊需手動比對，常有版本不一致問題</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">兩個；有核心平台負責大部分記錄，另有一兩個工具作補充，多數可串聯</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">一個；從構想、討論、任務到文件，都在同一平台內完整串聯呈現</div></div>
+    </div>
+  </div>
+
+  <div class="q-card" data-q="6">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">6</div><div class="q-dimension">跨部門資訊可見度</div></div>
+      <div class="q-text">若行銷部門正在規劃下季活動，產品部門能在不主動聯繫的情況下，掌握相關進度與決策嗎？</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">不行——部門間資訊預設不流通，需等對方主動分享或在週會上才知道</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">理論上可以，但實際上無人知道去哪裡找，通常還是靠 email 轉知或口頭轉述</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">部分可以；重要事項有共享空間，但並非所有內容都有記錄或即時更新</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">可以；各部門工作空間結構清晰，訂閱或搜尋即可即時取得相關進度</div></div>
+    </div>
+  </div>
+
+  <div class="q-card" data-q="7">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">7</div><div class="q-dimension">知識治理機制</div></div>
+      <div class="q-text">貴組織是否有明確的角色，負責定義「什麼資訊放在哪個工具、遵循什麼格式、由誰負責維護」？</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">沒有；工具由個人或部門自行選擇，組織層面沒有任何統一規範</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">有非正式慣例，但主要靠個人自律，缺乏明確的擁有者與執行機制</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">IT 或特定部門有規範文件，多數人遵守，但執行力度不完全一致</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">有指定的知識管理負責人或委員會，規範清晰且定期審查、更新</div></div>
+    </div>
+  </div>
+
+  <div class="section-label">組織文化與行為激勵</div>
+
+  <div class="q-card" data-q="8">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">8</div><div class="q-dimension">文件化的隱性激勵</div></div>
+      <div class="q-text">在貴組織中，員工花時間整理並更新文件，通常會得到什麼樣的組織回應？</div>
+      <div class="q-sub">這道題測試的是組織對知識管理的「真實重視程度」，而非口頭聲明。</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">幾乎沒有回應；多數人認為這是「額外工作」，優先投入執行性任務更有回報</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">管理者口頭鼓勵，但績效評估時幾乎不納入；文件化被視為個人選擇</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">部分主管將其視為工作品質的一部分，文件品質會影響評價，但非正式指標</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">文件化是「完成工作」的定義之一，完整記錄被視為專業度的展現，有明確激勵</div></div>
+    </div>
+  </div>
+
+  <div class="q-card" data-q="9">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">9</div><div class="q-dimension">目標對齊的真實深度</div></div>
+      <div class="q-text">若隨機詢問一位前線員工：「你目前的工作，如何連結到公司今年的優先目標？」能清楚回答的比例大約是多少？</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">低於 20%——多數員工只知道自己的任務，對公司目標的連結模糊或不清楚</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">約 40–50%——高層和少數核心人員清楚，第一線員工的理解程度明顯有落差</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">約 60–75%——目標有清楚傳達，多數人理解，但部分職能的連結仍不夠明確</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">超過 80%——目標、關鍵成果與個人任務有系統性連結，隨時可追溯</div></div>
+    </div>
+  </div>
+
+  <div class="q-card" data-q="10">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">10</div><div class="q-dimension">過程透明與資訊信任</div></div>
+      <div class="q-text">在貴組織中，部門間主動共享未完成的草稿、初步分析或仍在討論的方向，是否屬於常態？</div>
+      <div class="q-sub">這測試的是「過程透明」，而非最終成果的公開。</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">不是——多數人傾向等到「準備好」才分享，過程資訊視為部門內部事務</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">少數有信任基礎的團隊之間會這樣做，但非整體組織的常態</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">部分部門鼓勵這樣做，但開放程度因主管風格而有明顯差異</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">是——組織文化鼓勵早期共享，平台設計也支援草稿與討論的跨部門可見性</div></div>
+    </div>
+  </div>
+
+  <div class="section-label">策略投入與未來準備度</div>
+
+  <div class="q-card" data-q="11">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">11</div><div class="q-dimension">高層的真實投入程度</div></div>
+      <div class="q-text">最高決策層最近一次針對知識管理或協作工具，做出具體的資源配置決策，是什麼時候？</div>
+      <div class="q-sub">「具體決策」指：預算批准、人員配置或正式推行計畫——而非口頭表達重視。</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">從未——這個議題從未進入高層決策議程</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">超過兩年前，或僅停留在口頭肯定，尚未轉換為任何具體資源</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">過去一年內有過，主要由 IT 或中層主管推動，高層以批准為主</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">過去六個月內；高層將其列為策略優先項目，並親自參與推動</div></div>
+    </div>
+  </div>
+
+  <div class="q-card" data-q="12">
+    <div class="q-header">
+      <div class="q-top"><div class="q-num">12</div><div class="q-dimension">AI 知識應用就緒度</div></div>
+      <div class="q-text">若今天引入 AI 知識助理，讓員工可以用自然語言查詢組織知識，貴組織的知識庫能提供多少有效輸入？</div>
+      <div class="q-sub">AI 工具的實際效能，直接取決於知識庫的結構化程度與覆蓋範圍。</div>
+    </div>
+    <div class="options">
+      <div class="option" data-score="1" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">極少——知識散落在個人信箱和即時訊息中，AI 幾乎無有效資料可用</div></div>
+      <div class="option" data-score="2" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">部分——有些文件存在，但格式混亂、更新不及時，AI 效能將非常受限</div></div>
+      <div class="option" data-score="3" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">相當程度——核心業務知識有文件化，AI 可提供基礎支援，但仍有明顯盲區</div></div>
+      <div class="option" data-score="4" onclick="pick(this)"><div class="opt-indicator"></div><div class="opt-text">高度就緒——知識結構化程度足夠，AI 可立即提供高品質的查詢與推薦</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="submit-wrap" id="submitWrap">
+  <p class="submit-note" id="submitNote">尚有 <strong>12</strong> 道題目未作答</p>
+  <button class="submit-btn" id="submitBtn" disabled onclick="showResult()">產生診斷報告</button>
+</div>
+
+<div class="result-wrap" id="resultWrap">
+  <div class="result-card" id="resultCard"></div>
+</div>
+
+<div class="site-footer">
+  本診斷工具基於 Atlassian Knowledge Management Discovery Questionnaire 架構設計 · Titansoft 企業知識管理顧問團隊
+</div>
+
+<script>
+const answers = {};
+const TOTAL = 12;
+
+const LEVELS = [
+  {
+    min: 12, max: 20,
+    tag: 'Level 1 · Initial', tagColor: '#6e6e73', tagBg: '#f5f5f7',
+    title: '初始型組織', subtitle: '知識以個人為單位持有，組織無系統性留存能力',
+    desc: ['貴組織的知識管理目前處於「人治」階段。大量業務知識存在於特定員工的記憶與信箱中，而非可供他人存取的系統內。這意味著知識的流通依賴人際關係，決策缺乏可追溯性，人員流動將帶來顯著且難以量化的知識斷層風險。',
+           '從成本角度來看，此階段的隱性損失往往遠超過可見的工具費用——包含重工、搜尋時間浪費，以及因資訊不對稱造成的決策品質下降。這些損失通常被歸因於「溝通問題」，但根源是組織知識基礎設施的缺位。'],
+    dims: [
+      { label: '知識可及性', val: '強烈依賴人際網絡', pct: 10 },
+      { label: '決策可追溯性', val: '幾乎無記錄可查', pct: 8 },
+      { label: '工具整合度', val: '分散、無統一策略', pct: 10 },
+      { label: '文化成熟度', val: '知識被視為個人資產', pct: 10 },
+      { label: '組織韌性', val: '人員流動衝擊極高', pct: 8 },
+      { label: 'AI 就緒度', val: '基本上尚未具備條件', pct: 5 },
+    ],
+    implications: [
+      '每位資深員工的離職，等同於一次無法回收的知識損失事件——這是可以量化的組織風險，但多數組織選擇等到損失發生後才意識到',
+      '員工每週平均花費數小時在重複查找他人已擁有的資訊，這個隱性成本在規模擴大後將呈指數成長',
+      '在此基礎上引入 AI 知識工具，短期內效益將極為有限——AI 的輸出品質直接受限於輸入資料的結構化程度',
+      '建議優先行動：確立統一文件平台，並從流動性最高、業務影響最大的核心流程開始文件化',
+    ],
+    dotColor: '#6e6e73',
+  },
+  {
+    min: 21, max: 30,
+    tag: 'Level 2 · Emerging', tagColor: '#1D6F42', tagBg: '#E8F5EF',
+    title: '萌芽型組織', subtitle: '有意識、局部實踐，但尚未形成組織性的系統能力',
+    desc: ['貴組織已意識到知識管理的重要性，且有部分團隊建立了良好的文件習慣。然而，這些實踐尚未擴展至整個組織，且缺乏統一的平台、格式與治理機制。',
+           '此階段的典型症狀是「知識品質因人而異」：某些團隊的文件詳細完整，另一些則幾乎空白。這種不一致性使組織難以建立跨部門的知識網絡，也讓新人的上手效率存在顯著的「運氣成分」——你恰好進入哪個部門，決定了你能獲得多少有效資訊。'],
+    dims: [
+      { label: '知識可及性', val: '局部可及，覆蓋率不足', pct: 28 },
+      { label: '決策可追溯性', val: '重要事項有部分記錄', pct: 26 },
+      { label: '工具整合度', val: '工具重疊，整合度低', pct: 25 },
+      { label: '文化成熟度', val: '部分團隊有穩定習慣', pct: 30 },
+      { label: '組織韌性', val: '中度風險，因人因部門而異', pct: 28 },
+      { label: 'AI 就緒度', val: '局部可用，整體效益有限', pct: 20 },
+    ],
+    implications: [
+      '知識管理品質的不一致，正在製造組織內部的「資訊落差」——高效能和低效能團隊之間的差距，會因此持續擴大而非縮小',
+      '此階段若進行工具或流程整合，阻力通常最低；建議在慣性固化之前推動標準化，否則後期的遷移成本將顯著提高',
+      '關鍵問題：哪個部門已有最佳實踐？以其為樣板，設計可複製的擴展路徑，而非從零重新設計',
+      '中層管理者的推動意願是升級的關鍵槓桿；若高層尚未背書，應先聚焦取得可量化的局部成效，再以數據推動組織共識',
+    ],
+    dotColor: '#1D6F42',
+  },
+  {
+    min: 31, max: 40,
+    tag: 'Level 3 · Integrating', tagColor: '#004DB3', tagBg: '#EBF2FF',
+    title: '整合型組織', subtitle: '標準化已建立，正從局部最佳走向全組織一致的知識能力',
+    desc: ['貴組織已越過最困難的起步階段，建立了可識別的知識管理架構。工具策略相對清晰，核心部門有穩定的文件習慣，且具備一定的跨部門可見度。',
+           '此階段的關鍵挑戰是「最後一哩」：讓知識管理從「多數人在做」升級為「無人例外」，並使知識的品質與結構化程度，足以支撐更進階的應用——例如 AI 輔助查詢、自動化知識推薦，以及組織層級的知識分析與洞察。'],
+    dims: [
+      { label: '知識可及性', val: '核心知識可查，盲區縮小', pct: 62 },
+      { label: '決策可追溯性', val: '重要決策有標準記錄', pct: 60 },
+      { label: '工具整合度', val: '平台策略清晰，整合進行中', pct: 65 },
+      { label: '文化成熟度', val: '知識共享有制度支撐', pct: 65 },
+      { label: '組織韌性', val: '人員流動影響可控', pct: 62 },
+      { label: 'AI 就緒度', val: '基礎已具備，可開始試行', pct: 55 },
+    ],
+    implications: [
+      '貴組織的知識管理能力已是競爭優勢的來源，但距離「系統性護城河」仍有空間——關鍵在於能否將個別最佳實踐，轉化為組織層級的一致能力',
+      '此刻引入 AI 知識工具（如 Atlassian Rovo）的時機成熟，現有文件基礎已可提供有效輸入，但效益將直接反映在覆蓋率尚不足的領域',
+      '最大風險：知識治理角色若不夠明確，平台在快速成長後容易陷入結構混亂，前期投入的標準化成果可能因此侵蝕',
+      '建議進行一次知識庫稽核，系統性找出覆蓋率最低的業務領域，作為下一階段優先投資的對象',
+    ],
+    dotColor: '#004DB3',
+  },
+  {
+    min: 41, max: 48,
+    tag: 'Level 4 · Mastery', tagColor: '#5133B2', tagBg: '#EDEBFF',
+    title: '精通型組織', subtitle: '知識管理已成為組織競爭力的系統性基礎設施',
+    desc: ['貴組織的知識管理能力已達到少數企業才能實現的系統性成熟度。知識的創造、流通與利用已深度嵌入工作流程，文件化不是額外步驟，而是「完成工作」的必要組成部分。',
+           '在這個等級，知識管理已從成本中心轉變為價值引擎：更快的決策速度、更短的新人培育週期、以及 AI 工具得以充分發揮效能的知識基礎。下一個挑戰，是將此能力輸出為可量化的業務成果，並以可擴展的方式因應組織規模持續增長的需求。'],
+    dims: [
+      { label: '知識可及性', val: '全組織高覆蓋率', pct: 90 },
+      { label: '決策可追溯性', val: '標準化記錄，可即時查閱', pct: 92 },
+      { label: '工具整合度', val: '單一平台，深度整合', pct: 95 },
+      { label: '文化成熟度', val: '知識共享為組織 DNA', pct: 90 },
+      { label: '組織韌性', val: '人員流動風險最小化', pct: 95 },
+      { label: 'AI 就緒度', val: '高度就緒，可深度應用', pct: 92 },
+    ],
+    implications: [
+      '貴組織的知識管理能力已是可持續的競爭護城河——新進員工的效能曲線顯著優於業界平均，且此優勢將隨組織規模而放大',
+      '現階段的 AI 知識工具（如 Rovo AI Agent）可在現有基礎上立即提供高品質的知識查詢與主動推薦，ROI 可量化且預期顯著',
+      '建議將最佳實踐系統化為可複製的框架，向生態系夥伴或產業社群輸出——這本身即是商業資產與品牌定位的一部分',
+      '下一個成長邊界：從「被動留存知識」升級到「主動推薦知識」，即基於工作脈絡的預測性知識分發',
+    ],
+    dotColor: '#5133B2',
+  },
+];
+
+function pick(el) {
+  const card = el.closest('.q-card');
+  const q = parseInt(card.dataset.q);
+  card.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  card.classList.add('answered');
+  answers[q] = parseInt(el.dataset.score);
+  updateNav();
+}
+
+function updateNav() {
+  const done = Object.keys(answers).length;
+  document.getElementById('progressFill').style.width = (done / TOTAL * 100) + '%';
+  document.getElementById('progressLabel').textContent = done + ' / ' + TOTAL;
+  const left = TOTAL - done;
+  const note = document.getElementById('submitNote');
+  const btn = document.getElementById('submitBtn');
+  if (left === 0) {
+    note.innerHTML = '所有題目已完成，可以產生報告';
+    btn.disabled = false;
+  } else {
+    note.innerHTML = '尚有 <strong>' + left + '</strong> 道題目未作答';
+    btn.disabled = true;
+  }
+}
+
+function showResult() {
+  const total = Object.values(answers).reduce((a, b) => a + b, 0);
+  const lv = LEVELS.find(l => total >= l.min && total <= l.max) || LEVELS[LEVELS.length - 1];
+
+  const dimsHtml = lv.dims.map(d =>
+    `<div class="dim-item">
+      <div class="dim-label">${d.label}</div>
+      <div class="dim-val">${d.val}</div>
+      <div class="dim-bar"><div class="dim-bar-fill" style="width:${d.pct}%"></div></div>
+    </div>`
+  ).join('');
+
+  const impHtml = lv.implications.map(i =>
+    `<div class="implication-point">
+      <div class="imp-dot" style="background:${lv.dotColor}"></div>
+      <div class="imp-text">${i}</div>
+    </div>`
+  ).join('');
+
+  const descHtml = lv.desc.map(p => `<p>${p}</p>`).join('');
+
+  document.getElementById('resultCard').innerHTML = `
+    <div class="result-hero">
+      <div class="result-level-tag" style="color:${lv.tagColor};background:${lv.tagBg};">${lv.tag}</div>
+      <div class="result-title">${lv.title}</div>
+      <div class="result-subtitle">${lv.subtitle}</div>
+      <div class="result-score">
+        <span class="result-score-num" style="color:${lv.tagColor};">${total}</span>
+        <span class="result-score-denom">&thinsp;/ 48</span>
+      </div>
+    </div>
+    <div class="result-desc">${descHtml}</div>
+    <div class="result-dims">
+      <div class="result-dims-title">六大維度評估</div>
+      <div class="dim-grid">${dimsHtml}</div>
+    </div>
+    <div class="result-implication">
+      <div class="implication-title">關鍵觀察與行動建議</div>
+      <div class="implication-points">${impHtml}</div>
+    </div>
+    <div class="result-footer">
+      <div class="result-footer-note">本報告為自評診斷工具，反映組織在填寫當下的知識管理現況。建議每半年重新評估一次，以追蹤改善進程並識別新的優先項目。</div>
+      <button class="retry-btn" onclick="reset()">↺ 重新作答</button>
+    </div>
+  `;
+
+  document.getElementById('questionsWrap').style.display = 'none';
+  document.getElementById('submitWrap').style.display = 'none';
+  const rw = document.getElementById('resultWrap');
+  rw.classList.add('show');
+  rw.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function reset() {
+  Object.keys(answers).forEach(k => delete answers[k]);
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('.q-card').forEach(c => c.classList.remove('answered'));
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('progressLabel').textContent = '0 / 12';
+  document.getElementById('submitNote').innerHTML = '尚有 <strong>12</strong> 道題目未作答';
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('questionsWrap').style.display = '';
+  document.getElementById('submitWrap').style.display = '';
+  document.getElementById('resultWrap').classList.remove('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
